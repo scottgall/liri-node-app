@@ -23,11 +23,8 @@ var spotify = new Spotify({
   secret: keys.spotifySecret()
 });
 
-// var command = process.argv[2];
+// run function prompts user to choose a Liri command
 function run() {
-
-    let color = 'blue';
-    console.log(chalk[color]('dude'));
     console.log('');
     console.log('');
     console.log(chalk.bgWhiteBright.black('Welcome to...            '));
@@ -66,7 +63,7 @@ function run() {
         });
 }
 
-
+// songSearch function prompts user to enter a song title to search
 function songSearch() {
     inquirer
         .prompt([
@@ -80,30 +77,36 @@ function songSearch() {
             if (choice.song) {
                 displaySong(choice.song);
             } else {
+                // if user doesn't enter a song, run random function, which displays info for song title on random.txt
                 random();
             }
         });
 }
 
+// displaySong function uses song passed by songSearch function to get & display Spotify data
 function displaySong(x) {
     spotify.search({ type: 'track', query: x, limit: 1 }, function(err, data) {
-        if (err) {
-            return console.log('Error occurred: ' + err);
+        if (data.tracks.items.length === 0) {
+            console.log('');
+            console.log(chalk.bgWhiteBright.redBright.bold("Liri couldn't find that song.  Try again."));
+            console.log('');
+        } else {
+            var song = data.tracks.items[0];
+            console.log('');
+            console.log(chalk.yellowBright('*********************************************************'));
+            console.log(chalk.bgRedBright.bold('Artist:') + '  ' + chalk.redBright(song.artists[0].name));
+            console.log(chalk.bgMagentaBright.bold('Song Name:') + '  ' + chalk.magentaBright(song.name));
+            console.log(chalk.bgGreenBright.bold('Album:') + '  ' + chalk.greenBright(song.album.name));
+            console.log(chalk.bgBlueBright.bold('Preview Link:') + '  ' + chalk.blueBright(song.album.external_urls.spotify));
+            console.log(chalk.yellowBright('*********************************************************'));
+            console.log(''); 
         }
-        var song = data.tracks.items[0];
-        console.log('');
-        console.log(chalk.yellowBright('*********************************************************'));
-        console.log(chalk.bgRedBright.bold('Artist:') + '  ' + chalk.redBright(song.artists[0].name));
-        console.log(chalk.bgMagentaBright.bold('Song Name:') + '  ' + chalk.magentaBright(song.name));
-        console.log(chalk.bgGreenBright.bold('Album:') + '  ' + chalk.greenBright(song.album.name));
-        console.log(chalk.bgBlueBright.bold('Preview Link:') + '  ' + chalk.blueBright(song.album.external_urls.spotify));
-        console.log(chalk.yellowBright('*********************************************************'));
-        console.log(''); 
         end();
-    });
 
+    });
 }
 
+// movieSearch function prompts user to enter a movie title to search & 
 function movieSearch() {
     inquirer
         .prompt([
@@ -119,12 +122,15 @@ function movieSearch() {
                 movie = choice.movie;
             }
 
-            console.log(choice.movie)
-
     request("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy", function(error, response, body) {
-
-    if (!error && response.statusCode === 200) {
-            var info = JSON.parse(body);
+    
+    let info = JSON.parse(body);
+    if (info.Response === 'False') {
+        console.log('');
+        console.log(chalk.bgWhiteBright.redBright.bold("Liri couldn't find that movie.  Try again."));
+        console.log('');
+        
+    } else {
             console.log('');
             console.log(chalk.yellowBright('*********************************************************'));
             console.log(chalk.bgRedBright.bold('Title:') + ' ' +  chalk.redBright(info.Title));
@@ -136,14 +142,15 @@ function movieSearch() {
             console.log(chalk.bgMagentaBright.bold('Plot:') + ' ' + chalk.magentaBright(info.Plot));
             console.log(chalk.bgGreenBright.bold('Actors:') + ' ' + chalk.greenBright(info.Actors));
             console.log(chalk.yellowBright('*********************************************************'));
-            console.log('')
-            end();
-        }
+            console.log('');
+    }
+    end();
     });
 })
 
 }
 
+// random function gets song name from random.txt and passes it to displaySong function.
 function random() {
     fs.readFile("random.txt", "utf8", function(error, data) {
         if (error) {
@@ -155,6 +162,7 @@ function random() {
       });
 }
 
+// twitter function displays 20 most recent twitter posts.
 function twitter() {
     var colors = ['redBright', 'greenBright', 'yellowBright', 'blueBright'];
     var bgColors = ['bgRedBright', 'bgGreenBright', 'bgYellowBright', 'bgBlueBright'];
@@ -190,6 +198,7 @@ function twitter() {
     });
 }
 
+// end function prompts user to continue with Liri or exit.
 function end() {
     inquirer
         .prompt([
@@ -200,11 +209,11 @@ function end() {
             }
         ])
         .then((choice) => {
-            console.log('');
 
             if (choice.confirm) {
                 run();
             } else {
+                console.log('');
                 console.log(chalk.bgWhiteBright.black(ascii_text_generator('Goodbye',"2")));
                 console.log('');
             }
